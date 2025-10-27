@@ -37,6 +37,7 @@ import 'package:get/get_rx/src/rx_workers/utils/debouncer.dart';
 import 'package:uuid/uuid.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:vector_math/vector_math.dart' show Vector2;
 
 import '../common.dart';
 import '../utils/image.dart' as img;
@@ -2120,7 +2121,22 @@ class CanvasModel with ChangeNotifier {
     }
   }
 
-  edgeScrollMouse(double x, double y) {
+  Timer? _edgeScrollTimer;
+  double _lastEdgeScrollX = 0.0, _lastEdgeScrollY = 0.0;
+  bool _bumpMouseIsWorking = true;
+
+  setEdgeScrollTimer() {
+    _edgeScrollTimer = Timer(
+      const Duration(milliseconds: 10),
+      () => edgeScrollMouse(_lastEdgeScrollX, _lastEdgeScrollY));
+  }
+
+  cancelEdgeScrollTimer() {
+    _edgeScrollTimer?.cancel();
+    _edgeScrollTimer = null;
+  }
+
+  edgeScrollMouse(double x, double y) async {
     if (size.width == 0 || size.height == 0) {
       return;
     }
@@ -2133,6 +2149,10 @@ class CanvasModel with ChangeNotifier {
       return;
     }
 
+    // Latch current coordinate in case we're autorepeating
+    _lastEdgeScrollX = x;
+    _lastEdgeScrollY = y;
+
     // Trigger scrolling when the cursor is close to an edge
     const double edgeThickness = 120;
 
@@ -2142,12 +2162,6 @@ class CanvasModel with ChangeNotifier {
 
     var dxOffset = 0.0;
     var dyOffset = 0.0;
-
-    double scrollPixelX = _horizontal.position.pixels;
-    double scrollPixelY = _vertical.position.pixels;
-
-    final maxX = _horizontal.position.maxScrollExtent;
-    final maxY = _vertical.position.maxScrollExtent;
 
     Rect activeZone = Rect.fromLTWH(0, 0, size.width, size.height)
       .deflate(safeZoneThickness);
@@ -2166,25 +2180,56 @@ class CanvasModel with ChangeNotifier {
       }
     }
 
-    dxOffset = dxOffset.clamp(-scrollPixelX, maxX - scrollPixelX);
-    dyOffset = dyOffset.clamp(-scrollPixelY, maxY - scrollPixelY);
+    var encroachment = Vector2(dxOffset, dyOffset);
 
-    if (dxOffset != 0 || dyOffset != 0) {
-      scrollPixelX += dxOffset;
-      scrollPixelY += dyOffset;
+    var scrollPixel = Vector2(
+      _horizontal.position.pixels,
+      _vertical.position.pixels);
 
-      setScrollPercent(scrollPixelX / maxX, scrollPixelY / maxY);
-      pushScrollPositionToUI(scrollPixelX, scrollPixelY);
+    final max = Vector2(
+      _horizontal.position.maxScrollExtent,
+      _vertical.position.maxScrollExtent);
+
+    encroachment.clamp(-scrollPixel, max - scrollPixel);
+
+    if (encroachment.length > 0) {
+      var bumpAmount = -encroachment;
+
+      // Round away from 0
+      bumpAmount.x += bumpAmount.x.sign * 0.5;
+      bumpAmount.y += bumpAmount.y.sign * 0.5;
+
+      var bumpMouseSucceeded =
+        _bumpMouseIsWorking &&
+        (await rustDeskWinManager.call(
+          WindowType.Main,
+          kWindowBumpMouse,
+          {"dx": bumpAmount.x.round(), "dy": bumpAmount.y.round()})).result;
+
+      if (!bumpMouseSucceeded) {
+        // If we can't BumpMouse, then we switch to slower scrolling with autorepeat
+
+        // Don't keep hammering BumpMouse if it's not working.
+        _bumpMouseIsWorking = false;
+
+        // Keep scrolling as long as the user is overtop of an edge. Each time the
+        // timer fires sets a new timer.
+        setEdgeScrollTimer();
+
+        // When autorepeating, scale down the extent of the scroll, otherwise it'll be way too fast.
+        encroachment *= 0.2;
+      }
+
+      scrollPixel += encroachment;
+
+      var scrollPixelPercent = scrollPixel;
+
+      scrollPixelPercent.divide(max);
+
+      setScrollPercent(scrollPixelPercent.x, scrollPixelPercent.y);
+      pushScrollPositionToUI(scrollPixel.x, scrollPixel.y);
 
       notifyListeners();
-
-      dxOffset += dxOffset.sign * 0.5;
-      dyOffset += dyOffset.sign * 0.5;
-
-      rustDeskWinManager.call(
-        WindowType.Main,
-        kWindowBumpMouse,
-        {"dx": -dxOffset.round(), "dy": -dyOffset.round()});
     }
   }
 
