@@ -1,6 +1,10 @@
+# Extra CMake Modules
+find_package(ECM REQUIRED NO_MODULE)
+set(CMAKE_MODULE_PATH ${ECM_MODULE_PATH}/find-modules)
+
 # Project-level configuration.
-cmake_minimum_required(VERSION 3.10)
-project(runner LANGUAGES CXX)
+cmake_minimum_required(VERSION 3.16)
+project(runner LANGUAGES CXX C)
 
 # The name of the executable created for the application. Change this to change
 # the on-disk name of your application.
@@ -65,8 +69,63 @@ add_executable(${BINARY_NAME}
   "my_application.cc"
   "bump_mouse.cc"
   "bump_mouse_x11.cc"
+  "bump_mouse_wayland.cc"
   "${FLUTTER_MANAGED_DIR}/generated_plugin_registrant.cc"
 )
+
+# Wayland protocols
+find_package(WaylandScanner)
+find_package(WaylandProtocols QUIET)
+
+if (NOT WaylandScanner_FOUND)
+  message(WARNING "CMake extension WaylandScanner was not found.")
+elseif (NOT WaylandProtocols_FOUND)
+  message(WARNING "CMake extension WaylandProtocols was not found.")
+else()
+  add_definitions(-DHAVE_WAYLAND=1)
+
+  set(POINTER_CONSTRAINTS_PROTOCOL_NAME "pointer-constraints-unstable-v1")
+  set(POINTER_WARP_PROTOCOL_NAME "pointer-warp-v1")
+
+  set(POINTER_CONSTRAINTS_DEF "${WaylandProtocols_DATADIR}/unstable/pointer-constraints/${POINTER_CONSTRAINTS_PROTOCOL_NAME}.xml")
+  set(POINTER_WARP_DEF "${WaylandProtocols_DATADIR}/staging/pointer-warp/${POINTER_WARP_PROTOCOL_NAME}.xml")
+
+  if (NOT EXISTS "${POINTER_WARP_DEF}")
+    # pointer-warp-v1 is brand new as of writing this, it may be necessary
+    # to provide our own local copy of the XML protocol definition
+    # (this is what SDL does)
+    #
+    # to be removed when it can reasonably be expected that protocol-warp-v1.xml
+    # is present in the Wayland protocols data dir
+    set(POINTER_WARP_DEF "${CMAKE_CURRENT_SOURCE_DIR}/wayland-protocols/${POINTER_WARP_PROTOCOL_NAME}.xml")
+  endif()
+
+  if (EXISTS "${POINTER_CONSTRAINTS_DEF}")
+    add_definitions(-DHAVE_WAYLAND_POINTER_CONSTRAINTS_V1=1)
+
+    ecm_add_wayland_client_protocol(WAYLAND_GENERATED_SOURCES
+      PROTOCOL ${POINTER_CONSTRAINTS_DEF}
+      BASENAME ${POINTER_CONSTRAINTS_PROTOCOL_NAME})
+  endif()
+
+  if (EXISTS "${POINTER_WARP_DEF}")
+    add_definitions(-DHAVE_WAYLAND_POINTER_WARP_V1=1)
+
+    ecm_add_wayland_client_protocol(WAYLAND_GENERATED_SOURCES
+      PROTOCOL ${POINTER_WARP_DEF}
+      BASENAME ${POINTER_WARP_PROTOCOL_NAME})
+  endif()
+
+  target_sources(${BINARY_NAME} PRIVATE ${WAYLAND_GENERATED_SOURCES})
+
+  set_source_files_properties(bump_mouse_wayland.cc
+    PROPERTIES
+    OBJECT_DEPENDS "${WAYLAND_GENERATED_SOURCES}")
+
+  # This is where ecm_add_wayland_client_protocol puts the generated files.
+  target_include_directories(${BINARY_NAME}
+    PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+endif()
 
 # Apply the standard set of build settings. This can be removed for applications
 # that need different build settings.
