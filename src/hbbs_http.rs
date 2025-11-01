@@ -11,6 +11,8 @@ pub mod downloader;
 pub use http_client::create_http_client;
 pub use http_client::create_http_client_async;
 
+// RustC doesn't recognize sites where this is used
+#[allow(dead_code)]
 #[derive(Debug)]
 pub enum HbbHttpResponse<T> {
     ErrorFormat,
