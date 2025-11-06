@@ -406,7 +406,7 @@ Future<List<TRadioMenu<String>>> toolbarImageQuality(
       groupValue: groupValue,
       onChanged: (value) {
         onChanged(value);
-        customImageQualityDialog(ffi.sessionId, id, ffi, customFpsRange, customQualityRange);
+        customImageQualityDialog(ffi.sessionId, id, ffi, customQualityRange, customFpsRange);
       },
     ),
   ];

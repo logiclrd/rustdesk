@@ -18,7 +18,7 @@ customImageQualityWidget(
     required NumRange customQualityRange,
     required NumRange customFpsRange}) {
   if (initQuality < customQualityRange.minimumValue ||
-      initQuality > (showMoreQuality ? kMaxMoreQuality : customQualityRange.maximumValue)) {
+      initQuality > (showMoreQuality ? kMaxMoreQuality : kMaxPublicServerQuality)) {
     initQuality = customQualityRange.defaultValue;
   }
   if (initFps < customFpsRange.minimumValue || initFps > customFpsRange.maximumValue) {
@@ -27,7 +27,7 @@ customImageQualityWidget(
   final qualityValue = initQuality.obs;
   final fpsValue = initFps.obs;
 
-  final RxBool moreQualityChecked = RxBool(qualityValue.value > customQualityRange.maximumValue);
+  final RxBool moreQualityChecked = RxBool(qualityValue.value > kMaxPublicServerQuality);
   final debouncerQuality = Debouncer<double>(
     Duration(milliseconds: 1000),
     onChanged: setQuality,
@@ -57,10 +57,10 @@ customImageQualityWidget(
                 child: Slider(
                   value: qualityValue.value,
                   min: customQualityRange.minimumValue,
-                  max: moreQualityChecked.value ? kMaxMoreQuality : customQualityRange.maximumValue,
+                  max: moreQualityChecked.value ? kMaxMoreQuality : kMaxPublicServerQuality,
                   divisions: moreQualityChecked.value
                       ? ((kMaxMoreQuality - customQualityRange.minimumValue) / 10).round()
-                      : ((customQualityRange.maximumValue - customQualityRange.minimumValue) / 5).round(),
+                      : ((kMaxPublicServerQuality - customQualityRange.minimumValue) / 5).round(),
                   onChanged: setQuality == null
                       ? null
                       : (double value) async {
@@ -152,17 +152,14 @@ customImageQualityWidget(
 }
 
 customImageQualitySetting(NumRange customQualityRange, NumRange customFpsRange) {
-  final qualityKey = 'custom_image_quality';
-  final fpsKey = 'custom-fps';
-
   final initQuality =
-      (double.tryParse(bind.mainGetUserDefaultOption(key: qualityKey)) ??
+      (double.tryParse(bind.mainGetUserDefaultOption(key: kOptionCustomImageQuality)) ??
           customQualityRange.defaultValue);
-  final isQuanlityFixed = isOptionFixed(qualityKey);
+  final isQuanlityFixed = isOptionFixed(kOptionCustomImageQuality);
   final initFps =
-      (double.tryParse(bind.mainGetUserDefaultOption(key: fpsKey)) ??
+      (double.tryParse(bind.mainGetUserDefaultOption(key: kOptionCustomFps)) ??
           customFpsRange.defaultValue);
-  final isFpsFixed = isOptionFixed(fpsKey);
+  final isFpsFixed = isOptionFixed(kOptionCustomFps);
 
   return customImageQualityWidget(
       initQuality: initQuality,
@@ -171,12 +168,12 @@ customImageQualitySetting(NumRange customQualityRange, NumRange customFpsRange) 
           ? null
           : (v) {
               bind.mainSetUserDefaultOption(
-                  key: qualityKey, value: v.toString());
+                  key: kOptionCustomImageQuality, value: v.toString());
             },
       setFps: isFpsFixed
           ? null
           : (v) {
-              bind.mainSetUserDefaultOption(key: fpsKey, value: v.toString());
+              bind.mainSetUserDefaultOption(key: kOptionCustomFps, value: v.toString());
             },
       showFps: true,
       showMoreQuality: true,

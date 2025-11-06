@@ -82,7 +82,7 @@ const String kOptionScrollStyle = "scroll_style";
 const String kOptionEdgeScrollEdgeThickness = "edge-scroll-edge-thickness";
 const String kOptionImageQuality = "image_quality";
 const String kOptionCustomImageQuality = "custom_image_quality";
-const String kOptionCustomFps = "custom_fps";
+const String kOptionCustomFps = "custom-fps";
 const String kOptionOpenNewConnInTabs = "enable-open-new-connections-in-tabs";
 const String kOptionTextureRender = "use-texture-render";
 const String kOptionD3DRender = "allow-d3d-render";
@@ -234,7 +234,7 @@ const int kDesktopMaxDisplaySize = 3840;
 const double kDesktopFileTransferRowHeight = 30.0;
 const double kDesktopFileTransferHeaderHeight = 25.0;
 
-// Maximum additional quality allowed for connections not going through public relay servers
+const double kMaxPublicServerQuality = 100;
 const double kMaxMoreQuality = 2000;
 
 // trackpad speed

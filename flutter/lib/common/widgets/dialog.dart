@@ -1642,12 +1642,12 @@ customImageQualityDialog(SessionID sessionId, String id, FFI ffi, NumRange custo
       ? quality.toDouble()
       : customQualityRange.defaultValue;
   if (initQuality < customQualityRange.minimumValue ||
-      initQuality > (!hideMoreQuality ? kMaxMoreQuality : customQualityRange.maximumValue)) {
+      initQuality > (!hideMoreQuality ? kMaxMoreQuality : kMaxPublicServerQuality)) {
     initQuality = customQualityRange.defaultValue;
   }
   // fps
   final fpsOption =
-      await bind.sessionGetOption(sessionId: sessionId, arg: 'custom-fps');
+      await bind.sessionGetOption(sessionId: sessionId, arg:kOptionCustomFps);
   initFps = fpsOption == null
       ? customFpsRange.defaultValue
       : double.tryParse(fpsOption) ?? customFpsRange.defaultValue;

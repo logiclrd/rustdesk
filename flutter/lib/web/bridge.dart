@@ -391,7 +391,7 @@ class RustdeskImpl {
   Future<void> sessionSetCustomFps(
       {required UuidValue sessionId, required int fps, dynamic hint}) {
     return Future(
-        () => js.context.callMethod('setByName', ['custom-fps', fps]));
+        () => js.context.callMethod('setByName', [kOptionCustomFps, fps]));
   }
 
   Future<void> sessionLockScreen({required UuidValue sessionId, dynamic hint}) {
