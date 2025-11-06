@@ -29,6 +29,22 @@ use std::{
     time::{Duration, SystemTime},
 };
 
+pub struct ImageQualityLimits {
+    pub min_quality: i32,
+    pub max_public_server_quality: i32,
+    pub max_more_quality: i32,
+}
+
+impl ImageQualityLimits {
+    pub fn from(min_quality: i32, max_public_server_quality: i32, max_more_quality: i32) -> ImageQualityLimits {
+        ImageQualityLimits {
+            min_quality: min_quality,
+            max_public_server_quality: max_public_server_quality,
+            max_more_quality: max_more_quality,
+        }
+    }
+}
+
 // rust-ffigen can't grok the NumRange type imported from hbb_common
 pub struct NumRange {
     pub default_value: f64,
@@ -1456,6 +1472,13 @@ pub fn main_get_user_default_option(key: String) -> SyncReturn<String> {
 
 pub fn main_get_option_range(key: String) -> SyncReturn<NumRange> {
     SyncReturn(NumRange::from(get_option_range(key)))
+}
+
+pub fn main_get_custom_image_quality_limits() -> SyncReturn<ImageQualityLimits> {
+    use hbb_common::config::{UserDefaultConfig, keys::OPTION_CUSTOM_IMAGE_QUALITY};
+    use crate::client::{MAX_PUBLIC_SERVER_QUALITY, MAX_MORE_QUALITY};
+    let range = UserDefaultConfig::get_num_range(OPTION_CUSTOM_IMAGE_QUALITY);
+    SyncReturn(ImageQualityLimits::from(range.minimum as i32, MAX_PUBLIC_SERVER_QUALITY, MAX_MORE_QUALITY))
 }
 
 pub fn main_handle_relay_id(id: String) -> String {

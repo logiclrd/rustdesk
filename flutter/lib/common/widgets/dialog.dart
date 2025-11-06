@@ -1591,7 +1591,7 @@ void showConfirmSwitchSidesDialog(
   });
 }
 
-customImageQualityDialog(SessionID sessionId, String id, FFI ffi, NumRange customQualityRange, NumRange customFpsRange) async {
+customImageQualityDialog(SessionID sessionId, String id, FFI ffi, NumRange customQualityRange, ImageQualityLimits customQualityLimits, NumRange customFpsRange) async {
   double initQuality = customQualityRange.defaultValue;
   double initFps = customFpsRange.defaultValue;
   bool qualitySet = false;
@@ -1642,7 +1642,7 @@ customImageQualityDialog(SessionID sessionId, String id, FFI ffi, NumRange custo
       ? quality.toDouble()
       : customQualityRange.defaultValue;
   if (initQuality < customQualityRange.minimumValue ||
-      initQuality > (!hideMoreQuality ? kMaxMoreQuality : kMaxPublicServerQuality)) {
+      initQuality > (!hideMoreQuality ? customQualityLimits.maxMoreQuality : customQualityLimits.maxPublicServerQuality)) {
     initQuality = customQualityRange.defaultValue;
   }
   // fps
@@ -1663,6 +1663,7 @@ customImageQualityDialog(SessionID sessionId, String id, FFI ffi, NumRange custo
       showFps: !hideFps,
       showMoreQuality: !hideMoreQuality,
       customFpsRange: customFpsRange,
+      customQualityLimits: customQualityLimits,
       customQualityRange: customQualityRange);
   msgBoxCommon(ffi.dialogManager, 'Custom Image Quality', content, [btnClose]);
 }

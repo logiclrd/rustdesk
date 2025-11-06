@@ -234,9 +234,6 @@ const int kDesktopMaxDisplaySize = 3840;
 const double kDesktopFileTransferRowHeight = 30.0;
 const double kDesktopFileTransferHeaderHeight = 25.0;
 
-const double kMaxPublicServerQuality = 100;
-const double kMaxMoreQuality = 2000;
-
 // trackpad speed
 const String kKeyTrackpadSpeed = 'trackpad-speed';
 const int kMinTrackpadSpeed = 10;

@@ -1031,6 +1031,7 @@ class __DisplayPageState extends State<_DisplayPage> {
     ];
     RxBool showCustomImageQuality = false.obs;
     final customQualityRange = bind.mainGetOptionRange(key: kOptionCustomImageQuality);
+    final customQualityLimits = bind.mainGetCustomImageQualityLimits();
     final customFpsRange = bind.mainGetOptionRange(key: kOptionCustomFps);
     return Scaffold(
       appBar: AppBar(
@@ -1080,7 +1081,7 @@ class __DisplayPageState extends State<_DisplayPage> {
                       showCustomImageQuality.value =
                           value == kRemoteImageQualityCustom;
                     },
-              tail: customImageQualitySetting(customQualityRange, customFpsRange),
+              tail: customImageQualitySetting(customQualityRange, customQualityLimits, customFpsRange),
               showTail: showCustomImageQuality,
               notCloseValue: kRemoteImageQualityCustom,
             ),

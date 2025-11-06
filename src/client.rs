@@ -130,6 +130,7 @@ pub const SCRAP_X11_REF_URL: &str = "https://rustdesk.com/docs/en/manual/linux/#
 pub const AUDIO_BUFFER_MS: usize = 3000;
 
 pub const MAX_PUBLIC_SERVER_QUALITY: i32 = 100;
+pub const MAX_MORE_QUALITY: i32 = 2000;
 
 #[cfg(feature = "flutter")]
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
@@ -2229,7 +2230,7 @@ impl LoginConfigHandler {
             }
             msg.custom_image_quality = quality << 8;
             #[cfg(feature = "flutter")]
-            if let Some(custom_fps) = self.options.get("custom-fps") {
+            if let Some(custom_fps) = self.options.get(keys::OPTION_CUSTOM_FPS) {
                 let mut custom_fps = custom_fps.parse().unwrap_or(30);
                 if !allow_more && custom_fps > 30 {
                     custom_fps = 30;
@@ -2437,7 +2438,7 @@ impl LoginConfigHandler {
             let mut config = self.load_config();
             config
                 .options
-                .insert("custom-fps".to_owned(), fps.to_string());
+                .insert(keys::OPTION_CUSTOM_FPS.to_owned(), fps.to_string());
             self.save_config(config);
         }
         *self.custom_fps.lock().unwrap() = Some(fps as _);

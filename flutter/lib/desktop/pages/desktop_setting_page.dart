@@ -1799,6 +1799,7 @@ class _DisplayState extends State<_Display> {
     final isOptFixed = isOptionFixed(kOptionImageQuality);
     final groupValue = bind.mainGetUserDefaultOption(key: kOptionImageQuality);
     final customQualityRange = bind.mainGetOptionRange(key: kOptionCustomImageQuality);
+    final customQualityLimits = bind.mainGetCustomImageQualityLimits();
     final customFpsRange = bind.mainGetOptionRange(key: kOptionCustomFps);
     return _Card(title: 'Default Image Quality', children: [
       _Radio(context,
@@ -1823,7 +1824,7 @@ class _DisplayState extends State<_Display> {
           onChanged: isOptFixed ? null : onChanged),
       Offstage(
         offstage: groupValue != kRemoteImageQualityCustom,
-        child: customImageQualitySetting(customQualityRange, customFpsRange),
+        child: customImageQualitySetting(customQualityRange, customQualityLimits, customFpsRange),
       )
     ]);
   }
